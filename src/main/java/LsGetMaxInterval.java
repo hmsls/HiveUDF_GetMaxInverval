@@ -58,12 +58,20 @@ public class LsGetMaxInterval extends UDF {
                 }
                 periodStartDate1 = new Date(begin.getTime() + ds * period * (1000*3600*24));
                 periodEndDate1 = new Date(begin.getTime() + (ds+1) * (period) * (1000*3600*24));
+                //程序需改进地方，判断这个截止日期是不是在指定日期范围内，如果是，就如下，如果超出了，则日期为指定日期
+                if(periodEndDate1.getTime()>=end.getTime()){
+                    periodEndDate1 = end;
+                }
                 if((date.getTime()<=periodEndDate1.getTime()) && (date.getTime()>=periodStartDate1.getTime())){
                     if(overdueNum>max){
                         max = overdueNum;
                     }
                 }
-                if(datetm.equals(sdf.format(new Date(periodEndDate1.getTime() - (1000*3600*24)))) || datetm.equals(endDate)){
+                //在周期前一天、时间在开始结束区间内、周期之间大于1天打印，最后一天也打印
+                if(datetm.equals(sdf.format(new Date(periodEndDate1.getTime() - (1000*3600*24))))
+                        && date.getTime() <= end.getTime() && date.getTime() >= begin.getTime()
+                        && (periodEndDate1.getTime() - periodStartDate1.getTime()) > (1000*3600*24)
+                        || datetm.equals(endDate) ){
                     return "在"+sdf.format(periodStartDate1)+"和"+sdf.format(periodEndDate1)+"之间，逾期天数最大为："+max;
                 }else{
                     return "-";
@@ -78,7 +86,7 @@ public class LsGetMaxInterval extends UDF {
 
     public static void main(String[] args){
         LsGetMaxInterval lsGetMaxInterval = new LsGetMaxInterval();
-        String res = lsGetMaxInterval.evaluate("2019-02-01","2019-02-11",5,"2019-02-06",1);
+        String res = lsGetMaxInterval.evaluate("2019-02-01","2019-02-11",5,"2019-02-11",1);
         System.out.println(res);
     }
 }
